@@ -1,0 +1,86 @@
+---
+title: "week6_prac"
+author: "Oliver"
+date: "2021/12/8"
+output: html_document
+---
+
+```{r}
+install.packages("spatstat")
+install.packages("rgeos")
+install.packages("GISTools")
+install.packages("geojson")
+install.packages("geojsonio")
+install.packages("tmaptools")
+library(spatstat)
+library(here)
+library(sp)
+library(rgeos)
+library(maptools)
+library(GISTools)
+library(tmap)
+library(sf)
+library(geojson)
+library(geojsonio)
+library(tmaptools)
+```
+
+```{r}
+##First, get the London Borough Boundaries
+LondonBoroughs <- st_read("C:/Users/86188/Desktop/GIS/week1/statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp")
+
+```
+
+```{r echo=TRUE}
+install.packages("stringr")
+library(stringr)
+BoroughMap <- LondonBoroughs %>%
+  dplyr::filter(str_detect(GSS_CODE, "^E09"))%>%
+  st_transform(., 27700)
+qtm(BoroughMap)
+
+```
+
+```{r}
+summary(BoroughMap)
+```
+
+```{r}
+##Now get the location of all Blue Plaques in the City
+BluePlaques <- st_read("https://s3.eu-west-2.amazonaws.com/openplaques/open-plaques-london-2018-04-08.geojson")%>%
+  st_transform(.,27700)
+```
+
+```{r}
+summary(BluePlaques)
+```
+
+```{r}
+tmap_mode("plot")
+```
+
+```{r}
+tm_shape(BoroughMap) +
+  tm_polygons(col = NA, alpha = 0.5) +
+tm_shape(BluePlaques) +
+  tm_dots(col = "blue")
+```
+
+```{r}
+#remove duplicates
+library(tidyverse)
+
+library(sf)
+BluePlaques <- distinct(BluePlaques)
+```
+
+```{r}
+BluePlaquesSub <- BluePlaques[BoroughMap,]
+#check to see that they've been removed
+tmap_mode("plot")
+tm_shape(BoroughMap) +
+  tm_polygons(col = NA, alpha = 0.5) +
+tm_shape(BluePlaquesSub) +
+  tm_dots(col = "blue")
+```
+
